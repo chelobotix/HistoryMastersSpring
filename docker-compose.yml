@@ -3,6 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: historical_figures-postgres
     environment:
+      TZ: UTC
       POSTGRES_DB: ${DB_NAME:-historical_figures}
       POSTGRES_USER: ${DB_USERNAME:-historical_figures}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-historical_figures}
