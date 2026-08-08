@@ -1,7 +1,10 @@
 package com.example.historical_figures.user;
 
+import com.example.historical_figures.local_credential.LocalCredentialCreateRequest;
+import com.example.historical_figures.local_credential.LocalCredentialService;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,24 +13,21 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    private final LocalCredentialService localCredentialService;
 
     @GetMapping("/register")
     public String newUser(Model model) {
-        model.addAttribute("userCreateRequest", new UserCreateRequest(null, null));
+        model.addAttribute("localCredentialCreateRequest", new LocalCredentialCreateRequest(null, null));
         
         return "register";
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String create(@Valid @ModelAttribute("userCreateRequest") UserCreateRequest userCreateRequest,
+    public String create(@Valid @ModelAttribute("localCredentialCreateRequest") LocalCredentialCreateRequest localCredentialCreateRequest,
                                  BindingResult bindingResult,
                                  Model model,
                                  RedirectAttributes redirectAttributes) {
@@ -36,7 +36,7 @@ public class UserController {
         }
 
         try {
-            userService.save(userCreateRequest);
+            localCredentialService.saveLocal(localCredentialCreateRequest);
         } catch (DomainException ex) {
             if (ex.getErrorCode() == UserErrorCodes.USER_ALREADY_EXISTS) {
                 model.addAttribute("errorMessage", "Ya existe una cuenta con ese correo electrónico.");

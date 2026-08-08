@@ -1,5 +1,7 @@
 package com.example.historical_figures.user.integration;
 
+import com.example.historical_figures.local_credential.LocalCredential;
+import com.example.historical_figures.local_credential.LocalCredentialRepository;
 import com.example.historical_figures.role.Role;
 import com.example.historical_figures.role.RoleRepository;
 import com.example.historical_figures.user.User;
@@ -14,6 +16,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
@@ -43,25 +46,52 @@ class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Autowired
+    private LocalCredentialRepository localCredentialRepository;
+
+    @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     private Role roleUser;
 
     @BeforeEach
     void setUp() {
-        roleUser = roleRepository.findByName(UserFixtures.ROLE_USER)
+        roleUser = seededRoleUser();
+    }
+
+    private Role seededRoleUser() {
+        return roleRepository.findByName(UserFixtures.ROLE_USER)
                 .orElseThrow(() -> new IllegalStateException("ROLE_USER seed missing — check Flyway V4"));
     }
 
     private User newUser(String email) {
         User user = new User();
         user.setEmail(email);
-        user.setPassword(UserFixtures.ENCODED_PASSWORD);
         user.setIsEnabled(true);
         user.setIsLocked(false);
-        user.setIsEmailVerified(false);
-        user.setRoles(List.of(roleUser));
+        user.setRoles(List.of(seededRoleUser()));
         return user;
+    }
+
+    private LocalCredential newCredential(User user) {
+        LocalCredential credential = new LocalCredential();
+        credential.setUser(user);
+        credential.setPasswordDigest(UserFixtures.ENCODED_PASSWORD);
+        return credential;
+    }
+
+    /**
+     * Detaches everything afterwards: the inverse side of the credential is only set by the
+     * database, so reading it back from the first-level cache would always see null.
+     */
+    private User persistUser(String email) {
+        User saved = userRepository.saveAndFlush(newUser(email));
+        localCredentialRepository.saveAndFlush(newCredential(saved));
+        entityManager.flush();
+        entityManager.clear();
+        return saved;
     }
 
     @Nested
@@ -71,7 +101,7 @@ class UserRepositoryTest {
         @Test
         @DisplayName("persists user and generates id and timestamps")
         void persistsUser() {
-            User saved = userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            User saved = persistUser(UserFixtures.DEFAULT_EMAIL);
 
             assertThat(saved.getId()).isNotNull();
             assertThat(saved.getEmail()).isEqualTo(UserFixtures.DEFAULT_EMAIL);
@@ -83,7 +113,7 @@ class UserRepositoryTest {
         @Test
         @DisplayName("rejects duplicate email via unique constraint")
         void rejectsDuplicateEmail() {
-            userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            persistUser(UserFixtures.DEFAULT_EMAIL);
 
             assertThatThrownBy(() -> userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL)))
                     .isInstanceOf(DataIntegrityViolationException.class);
@@ -105,19 +135,20 @@ class UserRepositoryTest {
         @Test
         @DisplayName("returns user when email exists")
         void returnsUserWhenFound() {
-            userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            persistUser(UserFixtures.DEFAULT_EMAIL);
 
             Optional<User> found = userRepository.findByEmail(UserFixtures.DEFAULT_EMAIL);
 
             assertThat(found).isPresent();
             assertThat(found.get().getEmail()).isEqualTo(UserFixtures.DEFAULT_EMAIL);
-            assertThat(found.get().getPassword()).isEqualTo(UserFixtures.ENCODED_PASSWORD);
+            assertThat(found.get().getLocalCredential().getPasswordDigest())
+                    .isEqualTo(UserFixtures.ENCODED_PASSWORD);
         }
 
         @Test
         @DisplayName("loads roles eagerly via @EntityGraph")
         void loadsRolesViaEntityGraph() {
-            userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            persistUser(UserFixtures.DEFAULT_EMAIL);
 
             User found = userRepository.findByEmail(UserFixtures.DEFAULT_EMAIL).orElseThrow();
 
@@ -131,7 +162,7 @@ class UserRepositoryTest {
         @Test
         @DisplayName("is case-sensitive for email lookup")
         void isCaseSensitive() {
-            userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            persistUser(UserFixtures.DEFAULT_EMAIL);
 
             assertThat(userRepository.findByEmail("Ada.Lovelace@Example.COM")).isEmpty();
             assertThat(userRepository.findByEmail(UserFixtures.DEFAULT_EMAIL)).isPresent();
@@ -145,7 +176,7 @@ class UserRepositoryTest {
         @Test
         @DisplayName("returns user with roles within the persistence session")
         void returnsUserWithRoles() {
-            User saved = userRepository.saveAndFlush(newUser(UserFixtures.DEFAULT_EMAIL));
+            User saved = persistUser(UserFixtures.DEFAULT_EMAIL);
 
             User found = userRepository.findById(saved.getId()).orElseThrow();
 
@@ -163,7 +194,7 @@ class UserRepositoryTest {
         @Test
         @DisplayName("persists many-to-many link to ROLE_USER")
         void persistsRoleLink() {
-            User saved = userRepository.saveAndFlush(newUser("roles@example.com"));
+            User saved = persistUser("roles@example.com");
 
             User found = userRepository.findByEmail("roles@example.com").orElseThrow();
 

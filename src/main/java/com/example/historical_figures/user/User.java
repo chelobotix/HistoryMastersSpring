@@ -1,16 +1,14 @@
 package com.example.historical_figures.user;
 
+import com.example.historical_figures.auth_identity.AuthIdentity;
+import com.example.historical_figures.local_credential.LocalCredential;
 import com.example.historical_figures.role.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,10 +28,6 @@ public class User {
     private String email;
 
     @Setter
-    @Column(name = "password")
-    private String password;
-
-    @Setter
     @Column(name = "is_enabled")
     private Boolean isEnabled = false;
 
@@ -44,10 +38,6 @@ public class User {
     @Setter
     @Column(name = "is_email_verified")
     private Boolean isEmailVerified = false;
-
-    @Setter
-    @Column(name = "password_changed_at")
-    private Instant passwordChangedAt;
 
     @Setter
     @Column(name = "last_login_at")
@@ -68,6 +58,12 @@ public class User {
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role_id"})
     )
     private List<Role> roles;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = true, fetch = FetchType.EAGER)
+    private LocalCredential localCredential;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<AuthIdentity> authIdentities;
 
     // Lifecycle methods
     @PrePersist

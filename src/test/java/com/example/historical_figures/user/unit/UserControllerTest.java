@@ -1,12 +1,12 @@
 package com.example.historical_figures.user.unit;
 
+import com.example.historical_figures.local_credential.LocalCredentialService;
 import com.example.historical_figures.role.RoleErrorCodes;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import com.example.historical_figures.shared.services.ExceptionMapperService;
 import com.example.historical_figures.user.UserController;
 import com.example.historical_figures.user.UserErrorCodes;
 import com.example.historical_figures.user.UserResponse;
-import com.example.historical_figures.user.UserService;
 import com.example.historical_figures.user.support.UserFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,19 +43,19 @@ class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UserService userService;
+    private LocalCredentialService localCredentialService;
 
     @Nested
     @DisplayName("GET /users/register")
     class ShowRegisterForm {
 
         @Test
-        @DisplayName("returns register view with empty userCreateRequest")
+        @DisplayName("returns register view with empty localCredentialCreateRequest")
         void returnsRegisterView() throws Exception {
             mockMvc.perform(get("/users/register"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("register"))
-                    .andExpect(model().attributeExists("userCreateRequest"));
+                    .andExpect(model().attributeExists("localCredentialCreateRequest"));
         }
     }
 
@@ -66,7 +66,7 @@ class UserControllerTest {
         @Test
         @DisplayName("redirects to login with success flash on valid request")
         void redirectsOnSuccess() throws Exception {
-            when(userService.save(any())).thenReturn(
+            when(localCredentialService.saveLocal(any())).thenReturn(
                     new UserResponse(1L, UserFixtures.DEFAULT_EMAIL, List.of(UserFixtures.ROLE_USER))
             );
 
@@ -81,7 +81,7 @@ class UserControllerTest {
                             "Cuenta creada correctamente. Ya puedes iniciar sesión."
                     ));
 
-            verify(userService).save(any());
+            verify(localCredentialService).saveLocal(any());
         }
 
         @Test
@@ -93,15 +93,16 @@ class UserControllerTest {
                             .param("password", "123"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("register"))
-                    .andExpect(model().attributeHasFieldErrors("userCreateRequest", "email", "password"));
+                    .andExpect(model().attributeHasFieldErrors("localCredentialCreateRequest", "email", "password"));
 
-            verify(userService, never()).save(any());
+            verify(localCredentialService, never()).saveLocal(any());
         }
 
         @Test
         @DisplayName("returns register view with error when email already exists")
         void returnsRegisterWhenEmailExists() throws Exception {
-            when(userService.save(any())).thenThrow(new DomainException(UserErrorCodes.USER_ALREADY_EXISTS));
+            when(localCredentialService.saveLocal(any()))
+                    .thenThrow(new DomainException(UserErrorCodes.USER_ALREADY_EXISTS));
 
             mockMvc.perform(post("/users/register")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -118,7 +119,7 @@ class UserControllerTest {
         @Test
         @DisplayName("lets ControllerAdvice handle other DomainExceptions")
         void delegatesOtherDomainExceptionsToAdvice() throws Exception {
-            when(userService.save(any())).thenThrow(
+            when(localCredentialService.saveLocal(any())).thenThrow(
                     new DomainException(RoleErrorCodes.ROLE_NOT_FOUND, "Role not found")
             );
 

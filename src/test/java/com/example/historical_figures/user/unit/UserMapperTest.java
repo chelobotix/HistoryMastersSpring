@@ -1,6 +1,5 @@
 package com.example.historical_figures.user.unit;
 
-import com.example.historical_figures.role.Role;
 import com.example.historical_figures.user.User;
 import com.example.historical_figures.user.UserMapper;
 import com.example.historical_figures.user.UserResponse;
@@ -8,7 +7,6 @@ import com.example.historical_figures.user.support.UserFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,20 +29,10 @@ class UserMapperTest {
     @Test
     @DisplayName("maps multiple roles preserving order")
     void mapsMultipleRoles() {
-        Instant now = Instant.parse("2026-01-01T00:00:00Z");
-        Role admin = new Role(2L, "ROLE_ADMIN", now, now, null);
-        User user = new User(
+        User user = UserFixtures.userWithRoles(
                 1L,
                 UserFixtures.DEFAULT_EMAIL,
-                UserFixtures.ENCODED_PASSWORD,
-                true,
-                false,
-                false,
-                null,
-                null,
-                now,
-                now,
-                List.of(UserFixtures.roleUser(), admin)
+                List.of(UserFixtures.roleUser(), UserFixtures.roleAdmin())
         );
 
         UserResponse response = UserMapper.toResponse(user);
@@ -55,20 +43,7 @@ class UserMapperTest {
     @Test
     @DisplayName("maps empty roles list")
     void mapsEmptyRoles() {
-        Instant now = Instant.parse("2026-01-01T00:00:00Z");
-        User user = new User(
-                1L,
-                UserFixtures.DEFAULT_EMAIL,
-                UserFixtures.ENCODED_PASSWORD,
-                true,
-                false,
-                false,
-                null,
-                null,
-                now,
-                now,
-                List.of()
-        );
+        User user = UserFixtures.userWithRoles(1L, UserFixtures.DEFAULT_EMAIL, List.of());
 
         UserResponse response = UserMapper.toResponse(user);
 

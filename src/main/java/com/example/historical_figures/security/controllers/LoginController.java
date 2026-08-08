@@ -10,17 +10,15 @@ public class LoginController {
 
     @GetMapping("/login")
     public String login(@RequestParam(required = false) Boolean error,
-                        @RequestParam(required = false) Boolean logout,
-                        @RequestParam(required = false) Boolean expired,
+                        @RequestParam(required = false) String type,
                         Model model) {
         if (Boolean.TRUE.equals(error)) {
-            model.addAttribute("errorMessage", "Correo o contraseña incorrectos.");
-        }
-        if (Boolean.TRUE.equals(logout)) {
-            model.addAttribute("successMessage", "Has cerrado sesión correctamente.");
-        }
-        if (Boolean.TRUE.equals(expired)) {
-            model.addAttribute("errorMessage", "Tu sesión ha expirado. Inicia sesión de nuevo.");
+            if ("credentials".equals(type)) {
+                model.addAttribute("errorMessage", "Correo o contraseña incorrectos.");
+            }
+            if ("oauth2".equals(type)) {
+                model.addAttribute("errorMessage", "Fallo el inicio de sesion con cuenta externa");
+            }
         }
 
         return "login";

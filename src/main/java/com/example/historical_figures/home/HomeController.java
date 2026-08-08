@@ -1,7 +1,5 @@
 package com.example.historical_figures.home;
 
-import com.example.historical_figures.user.User;
-import com.example.historical_figures.user.UserCreateRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +12,7 @@ public class HomeController {
         return "redirect:/home";
     }
 
+    // TODO: arreglar test caidos, corre uno por uno y anda arreglando no todos de golpe
     @GetMapping("/home")
     public String index(Model model) {
         

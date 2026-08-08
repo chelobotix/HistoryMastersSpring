@@ -36,6 +36,10 @@ public class CustomUserPasswordAuthenticationProvider implements AuthenticationP
             throw new BadCredentialsException("Invalid credentials");
         }
 
+        if (userDetails.getPassword() == null) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
         if (passwordEncoder.matches(password, userDetails.getPassword())) {
             return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         }

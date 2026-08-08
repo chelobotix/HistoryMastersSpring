@@ -1,14 +1,16 @@
 package com.example.historical_figures.security;
 
+import com.example.historical_figures.security.config.GoogleOAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -19,25 +21,36 @@ public class SpringSecurityConfig {
     @Value("${security.require-ssl:false}")
     private boolean requireSsl;
 
+    /**
+     * Exposed as a bean so GoogleOAuth2LoginSuccessHandler writes the context it builds
+     * into the same store the filter chain reads on the next request.
+     */
     @Bean
-    public SecurityFilterChain authorizationServerSecurityFilterChain(
-            HttpSecurity http,
-            FilteredRequestCache requestCache) throws Exception {
-        OAuth2AuthorizationServerConfigurer asc = OAuth2AuthorizationServerConfigurer.authorizationServer();
+    public SecurityContextRepository securityContextRepository() {
+        return new DelegatingSecurityContextRepository(
+                new RequestAttributeSecurityContextRepository(),
+                new HttpSessionSecurityContextRepository()
+        );
+    }
 
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            FilteredRequestCache requestCache,
+            GoogleOAuth2LoginSuccessHandler googleOAuth2LoginSuccessHandler,
+            SecurityContextRepository securityContextRepository) throws Exception {
         http.authorizeHttpRequests(requests -> requests
                 .requestMatchers(
                     "/",
                     "/home",
                     "/login",
                     "/users/register",
+                    "/oauth2/**",
                     "/css/**",
                     "/error/**",
                     "/.well-known/**"
                 ).permitAll()
                 .anyRequest().authenticated());
-
-        
 
         if (requireSsl) {
             http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
@@ -45,18 +58,20 @@ public class SpringSecurityConfig {
 
         http.csrf(withDefaults());
 
+        http.securityContext(sc -> sc.securityContextRepository(securityContextRepository));
+
         http.formLogin(flc -> flc
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/home")
-                .failureUrl("/login?error=true"));
+                .failureUrl("/login?error=true&type=credentials"));
+
+        http.oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .successHandler(googleOAuth2LoginSuccessHandler)
+                .failureUrl("/login?error=true&type=oauth2"));
 
         http.requestCache(cache -> cache.requestCache(requestCache));
-
-        http.sessionManagement(sm -> sm
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)
-                .expiredUrl("/login?expired=true"));
 
         http.logout(loc -> loc
                 .logoutSuccessUrl("/home")
@@ -65,10 +80,5 @@ public class SpringSecurityConfig {
                 .deleteCookies("JSESSIONID"));
 
         return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

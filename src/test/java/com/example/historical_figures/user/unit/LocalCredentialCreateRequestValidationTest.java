@@ -1,6 +1,6 @@
 package com.example.historical_figures.user.unit;
 
-import com.example.historical_figures.user.UserCreateRequest;
+import com.example.historical_figures.local_credential.LocalCredentialCreateRequest;
 import com.example.historical_figures.user.support.UserFixtures;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -18,8 +18,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("UserCreateRequest validation")
-class UserCreateRequestValidationTest {
+@DisplayName("LocalCredentialCreateRequest validation")
+class LocalCredentialCreateRequestValidationTest {
 
     private static Validator validator;
 
@@ -33,7 +33,7 @@ class UserCreateRequestValidationTest {
     @Test
     @DisplayName("accepts a valid request")
     void acceptsValidRequest() {
-        Set<ConstraintViolation<UserCreateRequest>> violations =
+        Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
                 validator.validate(UserFixtures.createRequest());
 
         assertThat(violations).isEmpty();
@@ -48,8 +48,8 @@ class UserCreateRequestValidationTest {
         @ValueSource(strings = {" ", "\t"})
         @DisplayName("rejects blank values")
         void rejectsBlank(String email) {
-            Set<ConstraintViolation<UserCreateRequest>> violations =
-                    validator.validate(new UserCreateRequest(email, UserFixtures.DEFAULT_PASSWORD));
+            Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
+                    validator.validate(new LocalCredentialCreateRequest(email, UserFixtures.DEFAULT_PASSWORD));
 
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("email"));
@@ -58,8 +58,8 @@ class UserCreateRequestValidationTest {
         @Test
         @DisplayName("rejects invalid format")
         void rejectsInvalidFormat() {
-            Set<ConstraintViolation<UserCreateRequest>> violations =
-                    validator.validate(new UserCreateRequest("not-an-email", UserFixtures.DEFAULT_PASSWORD));
+            Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
+                    validator.validate(new LocalCredentialCreateRequest("not-an-email", UserFixtures.DEFAULT_PASSWORD));
 
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("email"));
@@ -75,8 +75,8 @@ class UserCreateRequestValidationTest {
         @ValueSource(strings = {" ", "\t"})
         @DisplayName("rejects blank values")
         void rejectsBlank(String password) {
-            Set<ConstraintViolation<UserCreateRequest>> violations =
-                    validator.validate(new UserCreateRequest(UserFixtures.DEFAULT_EMAIL, password));
+            Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
+                    validator.validate(new LocalCredentialCreateRequest(UserFixtures.DEFAULT_EMAIL, password));
 
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
@@ -85,8 +85,8 @@ class UserCreateRequestValidationTest {
         @Test
         @DisplayName("rejects passwords shorter than 6 characters")
         void rejectsTooShort() {
-            Set<ConstraintViolation<UserCreateRequest>> violations =
-                    validator.validate(new UserCreateRequest(UserFixtures.DEFAULT_EMAIL, "12345"));
+            Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
+                    validator.validate(new LocalCredentialCreateRequest(UserFixtures.DEFAULT_EMAIL, "12345"));
 
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
@@ -95,8 +95,8 @@ class UserCreateRequestValidationTest {
         @Test
         @DisplayName("rejects passwords longer than 20 characters")
         void rejectsTooLong() {
-            Set<ConstraintViolation<UserCreateRequest>> violations =
-                    validator.validate(new UserCreateRequest(UserFixtures.DEFAULT_EMAIL, "a".repeat(21)));
+            Set<ConstraintViolation<LocalCredentialCreateRequest>> violations =
+                    validator.validate(new LocalCredentialCreateRequest(UserFixtures.DEFAULT_EMAIL, "a".repeat(21)));
 
             assertThat(violations)
                     .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
@@ -105,8 +105,8 @@ class UserCreateRequestValidationTest {
         @Test
         @DisplayName("accepts password at min and max length bounds")
         void acceptsBoundaryLengths() {
-            assertThat(validator.validate(new UserCreateRequest(UserFixtures.DEFAULT_EMAIL, "123456"))).isEmpty();
-            assertThat(validator.validate(new UserCreateRequest(UserFixtures.DEFAULT_EMAIL, "a".repeat(20)))).isEmpty();
+            assertThat(validator.validate(new LocalCredentialCreateRequest(UserFixtures.DEFAULT_EMAIL, "123456"))).isEmpty();
+            assertThat(validator.validate(new LocalCredentialCreateRequest(UserFixtures.DEFAULT_EMAIL, "a".repeat(20)))).isEmpty();
         }
     }
 }
