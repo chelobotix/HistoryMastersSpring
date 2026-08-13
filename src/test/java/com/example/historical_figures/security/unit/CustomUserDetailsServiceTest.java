@@ -50,6 +50,30 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
+    @DisplayName("normalizes email with lower-case and trim before lookup")
+    void normalizesEmailBeforeLookup() {
+        User user = UserFixtures.user(1L, UserFixtures.DEFAULT_EMAIL);
+        when(userRepository.findByEmail(UserFixtures.DEFAULT_EMAIL)).thenReturn(Optional.of(user));
+
+        UserDetails details = customUserDetailsService.loadUserByUsername("  Ada.Lovelace@Example.COM ");
+
+        assertThat(details.getUsername()).isEqualTo(UserFixtures.DEFAULT_EMAIL);
+        verify(userRepository).findByEmail(UserFixtures.DEFAULT_EMAIL);
+    }
+
+    @Test
+    @DisplayName("loads oauth-only user with null password")
+    void loadsOauthOnlyUser() {
+        User user = UserFixtures.oauthUser(2L, UserFixtures.DEFAULT_EMAIL);
+        when(userRepository.findByEmail(UserFixtures.DEFAULT_EMAIL)).thenReturn(Optional.of(user));
+
+        UserDetails details = customUserDetailsService.loadUserByUsername(UserFixtures.DEFAULT_EMAIL);
+
+        assertThat(details.getPassword()).isNull();
+        assertThat(details.getUsername()).isEqualTo(UserFixtures.DEFAULT_EMAIL);
+    }
+
+    @Test
     @DisplayName("throws UsernameNotFoundException when email does not exist")
     void throwsWhenUserMissing() {
         when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());

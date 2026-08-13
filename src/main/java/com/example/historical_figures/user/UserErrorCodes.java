@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 public enum UserErrorCodes implements ErrorCode {
 
     USER_NOT_FOUND(1001, HttpStatus.NOT_FOUND, "User not found"),
-    USER_ALREADY_EXISTS(1002, HttpStatus.CONFLICT, "A user with the given data already exists"),
+    USER_ALREADY_EXISTS(1002, HttpStatus.CONFLICT, "A user with the given data already exists, link it in settings menu"),
     USER_INVALID_DATA(1003, HttpStatus.UNPROCESSABLE_ENTITY, "User data is invalid");
 
     private final int code;

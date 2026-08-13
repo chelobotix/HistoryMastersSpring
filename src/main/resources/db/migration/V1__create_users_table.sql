@@ -1,11 +1,9 @@
 CREATE TABLE users (
     id                  BIGSERIAL PRIMARY KEY,
     email               VARCHAR(255) NOT NULL,
-    password            VARCHAR(255) NOT NULL,
     is_enabled          BOOLEAN NOT NULL DEFAULT TRUE,
     is_locked           BOOLEAN NOT NULL DEFAULT FALSE,
     is_email_verified   BOOLEAN NOT NULL DEFAULT FALSE,
-    password_changed_at TIMESTAMPTZ,
     last_login_at       TIMESTAMPTZ,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
