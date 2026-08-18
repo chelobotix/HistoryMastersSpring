@@ -8,7 +8,14 @@
         <title>Document</title>
     </head>
     <body>
-        <h1>Welcome to HOME!!!</h1>
+    <h1 th:text="#{home.welcome}">Welcome to HOME!!!</h1>
+    <form method="post" th:action="@{/users/update_locale}">
+        <select name="locale" onchange="this.form.submit()">
+            <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+            <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+            <option value="pt" th:selected="${#locale.language == 'pt'}">Português</option>
+        </select>
+    </form>
         <div sec:authorize="isAuthenticated()">
             <p>Welcome, <span sec:authentication="name"></span>!</p>
         </div>

@@ -34,4 +34,15 @@ public class UserServiceImpl implements UserService {
 
         return UserMapper.toResponse(user);
     }
+
+    @Override
+    public void setLocale(User user, String locale) {
+        try {
+            UserLocaleSupportedLanguages lang = UserLocaleSupportedLanguages.valueOf(locale.toUpperCase());
+            user.setLocale(lang);
+            userRepository.save(user);
+        } catch (IllegalArgumentException e) {
+            throw new DomainException(UserErrorCodes.USER_INVALID_LOCALE);
+        }
+    }
 }

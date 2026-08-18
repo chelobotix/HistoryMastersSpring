@@ -7,6 +7,7 @@ import com.example.historical_figures.local_credential.LocalCredential;
 import com.example.historical_figures.local_credential.LocalCredentialCreateRequest;
 import com.example.historical_figures.role.Role;
 import com.example.historical_figures.user.User;
+import com.example.historical_figures.user.UserLocaleSupportedLanguages;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -47,26 +48,26 @@ public final class UserFixtures {
     /** Local account: email + password digest. */
     public static User user(Long id, String email) {
         LocalCredential credential = localCredential(null);
-        User user = build(id, email, true, false, false, List.of(roleUser()), credential);
+        User user = build(id, email, true, false, false, UserLocaleSupportedLanguages.EN, List.of(roleUser()), credential);
         credential.setUser(user);
         return user;
     }
 
     /** OAuth-only account: no local password credential. */
     public static User oauthUser(Long id, String email) {
-        return build(id, email, true, false, true, List.of(roleUser()), null);
+        return build(id, email, true, false, true, UserLocaleSupportedLanguages.EN, List.of(roleUser()), null);
     }
 
     public static User disabledOauthUser(Long id, String email) {
-        return build(id, email, false, false, true, List.of(roleUser()), null);
+        return build(id, email, false, false, true, UserLocaleSupportedLanguages.EN, List.of(roleUser()), null);
     }
 
     public static User lockedOauthUser(Long id, String email) {
-        return build(id, email, true, true, true, List.of(roleUser()), null);
+        return build(id, email, true, true, true, UserLocaleSupportedLanguages.EN, List.of(roleUser()), null);
     }
 
     public static User userWithRoles(Long id, String email, List<Role> roles) {
-        return build(id, email, true, false, false, roles, null);
+        return build(id, email, true, false, false, UserLocaleSupportedLanguages.EN, roles, null);
     }
 
     private static User build(
@@ -75,6 +76,7 @@ public final class UserFixtures {
             boolean enabled,
             boolean locked,
             boolean emailVerified,
+            UserLocaleSupportedLanguages locale,
             List<Role> roles,
             LocalCredential credential) {
         return new User(
@@ -86,6 +88,7 @@ public final class UserFixtures {
                 null,
                 FIXED_NOW,
                 FIXED_NOW,
+                locale,
                 roles,
                 credential,
                 new ArrayList<>()

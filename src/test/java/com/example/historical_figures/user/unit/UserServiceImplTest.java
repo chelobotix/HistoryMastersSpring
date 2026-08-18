@@ -3,6 +3,7 @@ package com.example.historical_figures.user.unit;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import com.example.historical_figures.user.User;
 import com.example.historical_figures.user.UserErrorCodes;
+import com.example.historical_figures.user.UserLocaleSupportedLanguages;
 import com.example.historical_figures.user.UserRepository;
 import com.example.historical_figures.user.UserResponse;
 import com.example.historical_figures.user.UserServiceImpl;
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -89,6 +91,36 @@ class UserServiceImplTest {
                     .isInstanceOf(DomainException.class)
                     .satisfies(ex -> assertThat(((DomainException) ex).getErrorCode())
                             .isEqualTo(UserErrorCodes.USER_NOT_FOUND));
+        }
+    }
+
+    @Nested
+    @DisplayName("setLocale")
+    class SetLocale {
+
+        @Test
+        @DisplayName("parses the locale case-insensitively, sets it on the user and persists it")
+        void setsAndPersistsLocale() {
+            User user = UserFixtures.user(7L, UserFixtures.DEFAULT_EMAIL);
+
+            userService.setLocale(user, "es");
+
+            assertThat(user.getLocale()).isEqualTo(UserLocaleSupportedLanguages.ES);
+            verify(userRepository).save(user);
+        }
+
+        @Test
+        @DisplayName("throws DomainException with USER_INVALID_LOCALE for an unsupported locale")
+        void throwsOnUnsupportedLocale() {
+            User user = UserFixtures.user(7L, UserFixtures.DEFAULT_EMAIL);
+
+            assertThatThrownBy(() -> userService.setLocale(user, "fr"))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> assertThat(((DomainException) ex).getErrorCode())
+                            .isEqualTo(UserErrorCodes.USER_INVALID_LOCALE));
+
+            assertThat(user.getLocale()).isEqualTo(UserLocaleSupportedLanguages.EN);
+            verify(userRepository, never()).save(user);
         }
     }
 }

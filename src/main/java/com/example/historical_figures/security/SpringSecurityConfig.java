@@ -42,12 +42,13 @@ public class SpringSecurityConfig {
         http.authorizeHttpRequests(requests -> requests
                 .requestMatchers(
                     "/",
+                        "/css/**",
+                        "/error/**",
                     "/home",
                     "/login",
-                    "/users/register",
                     "/oauth2/**",
-                    "/css/**",
-                    "/error/**",
+                        "/users/register",
+                        "/users/update_locale",
                     "/.well-known/**"
                 ).permitAll()
                 .anyRequest().authenticated());
