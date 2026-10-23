@@ -7,6 +7,7 @@ import com.example.historical_figures.auth_identity.AuthIdentityRepository;
 import com.example.historical_figures.auth_identity.AuthIdentityServiceImpl;
 import com.example.historical_figures.role.RoleName;
 import com.example.historical_figures.role.RoleService;
+import com.example.historical_figures.security.config.AuthenticationFacade;
 import com.example.historical_figures.shared.errors.ErrorCode;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import com.example.historical_figures.user.User;
@@ -54,6 +55,9 @@ class AuthIdentityServiceImplTest {
     @Mock
     private RoleService roleService;
 
+    @Mock
+    private AuthenticationFacade authenticationFacade;
+
     private static Validator validator;
 
     private AuthIdentityServiceImpl authIdentityService;
@@ -72,7 +76,8 @@ class AuthIdentityServiceImplTest {
                 authIdentityRepository,
                 userRepository,
                 roleService,
-                validator
+                validator,
+                authenticationFacade
         );
     }
 

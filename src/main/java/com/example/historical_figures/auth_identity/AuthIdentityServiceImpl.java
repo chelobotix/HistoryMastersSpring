@@ -2,9 +2,11 @@ package com.example.historical_figures.auth_identity;
 
 import com.example.historical_figures.role.RoleName;
 import com.example.historical_figures.role.RoleService;
+import com.example.historical_figures.security.config.AuthenticationFacade;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import com.example.historical_figures.user.User;
 import com.example.historical_figures.user.UserErrorCodes;
+import com.example.historical_figures.user.UserLocaleSupportedLanguages;
 import com.example.historical_figures.user.UserRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -25,6 +28,7 @@ public class AuthIdentityServiceImpl implements AuthIdentityService {
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final Validator validator;
+    private final AuthenticationFacade authenticationFacade;
 
     @Override
     @Transactional
@@ -105,6 +109,9 @@ public class AuthIdentityServiceImpl implements AuthIdentityService {
         user.setIsEnabled(true);
         user.setIsLocked(false);
         user.setIsEmailVerified(true);
+
+        Locale sessionLocale = authenticationFacade.getLocaleFromSession().orElse(Locale.of("en"));
+        user.setLocale(UserLocaleSupportedLanguages.validate(sessionLocale.getLanguage()));
 
         return user;
     }

@@ -1,22 +1,15 @@
 package com.example.historical_figures.user.integration;
 
-import com.example.historical_figures.auth_identity.AuthIdentityErrorCodes;
-import com.example.historical_figures.auth_identity.AuthIdentityProvider;
-import com.example.historical_figures.auth_identity.AuthIdentityRepository;
-import com.example.historical_figures.auth_identity.AuthIdentityService;
-import com.example.historical_figures.auth_identity.AuthIdentityServiceImpl;
+import com.example.historical_figures.auth_identity.*;
 import com.example.historical_figures.local_credential.LocalCredentialCreateRequest;
 import com.example.historical_figures.local_credential.LocalCredentialService;
 import com.example.historical_figures.local_credential.LocalCredentialServiceImpl;
+import com.example.historical_figures.role.Role;
 import com.example.historical_figures.role.RoleServiceImpl;
+import com.example.historical_figures.security.config.AuthenticationFacade;
 import com.example.historical_figures.shared.errors.ErrorCode;
 import com.example.historical_figures.shared.exceptions.DomainException;
-import com.example.historical_figures.user.User;
-import com.example.historical_figures.user.UserErrorCodes;
-import com.example.historical_figures.user.UserRepository;
-import com.example.historical_figures.user.UserResponse;
-import com.example.historical_figures.user.UserService;
-import com.example.historical_figures.user.UserServiceImpl;
+import com.example.historical_figures.user.*;
 import com.example.historical_figures.user.support.UserFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         LocalCredentialServiceImpl.class,
         AuthIdentityServiceImpl.class,
         RoleServiceImpl.class,
+    AuthenticationFacade.class,
         UserServiceImplIntegrationTest.AuthTestBeans.class
 })
 @Testcontainers
@@ -210,7 +204,7 @@ class UserServiceImplIntegrationTest {
             assertThat(persisted.getIsLocked()).isFalse();
             assertThat(persisted.getIsEmailVerified()).isTrue();
             assertThat(persisted.getRoles())
-                    .extracting(role -> role.getName())
+                .extracting(Role::getName)
                     .containsExactly(UserFixtures.ROLE_USER);
 
             var identity = authIdentityRepository

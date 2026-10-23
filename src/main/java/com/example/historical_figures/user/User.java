@@ -4,8 +4,10 @@ import com.example.historical_figures.auth_identity.AuthIdentity;
 import com.example.historical_figures.local_credential.LocalCredential;
 import com.example.historical_figures.role.Role;
 import jakarta.persistence.*;
-
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.Instant;
@@ -48,6 +50,11 @@ public class User {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Setter
+    @Enumerated(EnumType.STRING)
+    @Column(name = "locale", nullable = false)
+    private UserLocaleSupportedLanguages locale;
 
     @Setter
     @ManyToMany

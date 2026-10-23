@@ -7,11 +7,9 @@ import com.example.historical_figures.local_credential.LocalCredentialServiceImp
 import com.example.historical_figures.role.RoleErrorCodes;
 import com.example.historical_figures.role.RoleName;
 import com.example.historical_figures.role.RoleService;
+import com.example.historical_figures.security.config.AuthenticationFacade;
 import com.example.historical_figures.shared.exceptions.DomainException;
-import com.example.historical_figures.user.User;
-import com.example.historical_figures.user.UserErrorCodes;
-import com.example.historical_figures.user.UserRepository;
-import com.example.historical_figures.user.UserResponse;
+import com.example.historical_figures.user.*;
 import com.example.historical_figures.user.support.UserFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,20 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LocalCredentialServiceImpl")
@@ -53,6 +43,9 @@ class LocalCredentialServiceImplTest {
 
     @Mock
     private LocalCredentialRepository localCredentialRepository;
+
+    @Mock
+    private AuthenticationFacade authFacade;
 
     @InjectMocks
     private LocalCredentialServiceImpl localCredentialService;
@@ -93,8 +86,27 @@ class LocalCredentialServiceImplTest {
         assertThat(savedCredential.getPasswordDigest()).isEqualTo(UserFixtures.ENCODED_PASSWORD);
         assertThat(savedCredential.getUser()).isSameAs(saved);
 
+        assertThat(saved.getLocale()).isEqualTo(UserLocaleSupportedLanguages.EN);
+
         assertThat(response.email()).isEqualTo("ada.lovelace@example.com");
         assertThat(response.roles()).containsExactly(UserFixtures.ROLE_USER);
+    }
+
+    @Test
+    @DisplayName("adopts the locale chosen anonymously in the session")
+    void adoptsSessionLocale() {
+        when(passwordEncoder.encode(anyString())).thenReturn(UserFixtures.ENCODED_PASSWORD);
+        grantRoleUser();
+        when(authFacade.getLocaleFromSession()).thenReturn(Optional.of(Locale.of("es")));
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(localCredentialRepository.saveAndFlush(any(LocalCredential.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        localCredentialService.saveLocal(UserFixtures.createRequest());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).saveAndFlush(userCaptor.capture());
+        assertThat(userCaptor.getValue().getLocale()).isEqualTo(UserLocaleSupportedLanguages.ES);
     }
 
     @Test

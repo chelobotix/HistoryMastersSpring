@@ -4,4 +4,6 @@ public interface UserService {
 
     UserResponse getById(Long id);
     UserResponse getByEmail(String email);
+
+    void setLocale(User user, String locale);
 }

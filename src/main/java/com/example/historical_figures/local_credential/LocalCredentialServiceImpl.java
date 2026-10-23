@@ -2,6 +2,7 @@ package com.example.historical_figures.local_credential;
 
 import com.example.historical_figures.role.RoleName;
 import com.example.historical_figures.role.RoleService;
+import com.example.historical_figures.security.config.AuthenticationFacade;
 import com.example.historical_figures.shared.exceptions.DomainException;
 import com.example.historical_figures.user.*;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class LocalCredentialServiceImpl implements LocalCredentialService {
     private final RoleService roleService;
     private final UserRepository userRepository;
     private final LocalCredentialRepository localCredentialRepository;
+    private final AuthenticationFacade authFacade;
 
     @Override
     @Transactional
@@ -30,6 +33,7 @@ public class LocalCredentialServiceImpl implements LocalCredentialService {
         user.setEmail(localCredentialCreateRequest.email().toLowerCase().trim());
         user.setIsEnabled(true);
         user.setIsLocked(false);
+        user.setLocale(resolveLocale());
 
         localCredential.setUser(user);
         localCredential.setPasswordDigest(passwordEncoder.encode(localCredentialCreateRequest.password()));
@@ -50,5 +54,16 @@ public class LocalCredentialServiceImpl implements LocalCredentialService {
 
 
         return UserMapper.toResponse(user);
+    }
+
+    /**
+     * New accounts adopt the locale chosen while browsing anonymously, defaulting to English.
+     */
+    private UserLocaleSupportedLanguages resolveLocale() {
+        return authFacade.getLocaleFromSession()
+                .map(Locale::getLanguage)
+                .map(String::toUpperCase)
+                .map(UserLocaleSupportedLanguages::valueOf)
+                .orElse(UserLocaleSupportedLanguages.EN);
     }
 }

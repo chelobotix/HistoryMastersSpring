@@ -5,6 +5,7 @@ import com.example.historical_figures.local_credential.LocalCredentialRepository
 import com.example.historical_figures.role.Role;
 import com.example.historical_figures.role.RoleRepository;
 import com.example.historical_figures.user.User;
+import com.example.historical_figures.user.UserLocaleSupportedLanguages;
 import com.example.historical_figures.user.UserRepository;
 import com.example.historical_figures.user.support.UserFixtures;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +72,7 @@ class UserRepositoryTest {
         user.setEmail(email);
         user.setIsEnabled(true);
         user.setIsLocked(false);
+        user.setLocale(UserLocaleSupportedLanguages.EN);
         user.setRoles(List.of(seededRoleUser()));
         return user;
     }

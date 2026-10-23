@@ -12,7 +12,7 @@ public class HomeController {
         return "redirect:/home";
     }
 
-    // TODO: arreglar test caidos, corre uno por uno y anda arreglando no todos de golpe
+    // TODO:
     @GetMapping("/home")
     public String index(Model model) {
         
