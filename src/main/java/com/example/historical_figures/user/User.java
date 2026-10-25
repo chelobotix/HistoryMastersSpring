@@ -3,27 +3,22 @@ package com.example.historical_figures.user;
 import com.example.historical_figures.auth_identity.AuthIdentity;
 import com.example.historical_figures.local_credential.LocalCredential;
 import com.example.historical_figures.role.Role;
+import com.example.historical_figures.shared.models.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.proxy.HibernateProxy;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
-    @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private Long id;
+public class User extends BaseEntity {
 
     @Setter
     @Column(name = "email")
@@ -45,10 +40,10 @@ public class User {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
     @Setter
@@ -56,6 +51,7 @@ public class User {
     @Column(name = "locale", nullable = false)
     private UserLocaleSupportedLanguages locale;
 
+    // Relations
     @Setter
     @ManyToMany
     @JoinTable(
@@ -71,40 +67,4 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AuthIdentity> authIdentities;
-
-    // Lifecycle methods
-    @PrePersist
-    void onCreate() {
-        Instant now = Instant.now();
-        createdAt = now;
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = Instant.now();
-    }
-
-    // Equals and hashCode
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy proxy
-                ? proxy.getHibernateLazyInitializer().getPersistentClass()
-                : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy
-                ? proxy.getHibernateLazyInitializer().getPersistentClass()
-                : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
-        User other = (User) o;
-        return getId() != null && Objects.equals(getId(), other.getId());
-    }
-
-    @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy proxy
-                ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
-                : getClass().hashCode();
-    }
 }

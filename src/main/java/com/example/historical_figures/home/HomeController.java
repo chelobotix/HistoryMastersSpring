@@ -12,7 +12,7 @@ public class HomeController {
         return "redirect:/home";
     }
 
-    // TODO:
+    // TODO: crear modelos figures
     @GetMapping("/home")
     public String index(Model model) {
         
