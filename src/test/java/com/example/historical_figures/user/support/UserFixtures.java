@@ -11,6 +11,7 @@ import com.example.historical_figures.user.UserLocaleSupportedLanguages;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,16 +34,21 @@ public final class UserFixtures {
     private UserFixtures() {
     }
 
+    private static <T> T withId(T entity, Long id) {
+        ReflectionTestUtils.setField(entity, "id", id);
+        return entity;
+    }
+
     public static Role roleUser() {
-        return new Role(1L, ROLE_USER, FIXED_NOW, FIXED_NOW, null);
+        return withId(new Role(ROLE_USER, FIXED_NOW, FIXED_NOW, null), 1L);
     }
 
     public static Role roleAdmin() {
-        return new Role(2L, ROLE_ADMIN, FIXED_NOW, FIXED_NOW, null);
+        return withId(new Role(ROLE_ADMIN, FIXED_NOW, FIXED_NOW, null), 2L);
     }
 
     public static LocalCredential localCredential(User user) {
-        return new LocalCredential(1L, user, ENCODED_PASSWORD, null, null, FIXED_NOW, FIXED_NOW);
+        return withId(new LocalCredential(user, ENCODED_PASSWORD, null, null, FIXED_NOW, FIXED_NOW), 1L);
     }
 
     /** Local account: email + password digest. */
@@ -79,8 +85,7 @@ public final class UserFixtures {
             UserLocaleSupportedLanguages locale,
             List<Role> roles,
             LocalCredential credential) {
-        return new User(
-                id,
+        return withId(new User(
                 email,
                 enabled,
                 locked,
@@ -92,7 +97,7 @@ public final class UserFixtures {
                 roles,
                 credential,
                 new ArrayList<>()
-        );
+        ), id);
     }
 
     public static AuthIdentity authIdentity(Long id, User user) {
@@ -100,15 +105,14 @@ public final class UserFixtures {
     }
 
     public static AuthIdentity authIdentity(Long id, User user, String uid) {
-        return new AuthIdentity(
-                id,
+        return withId(new AuthIdentity(
                 user,
                 AuthIdentityProvider.GOOGLE,
                 uid,
                 GOOGLE_PICTURE,
                 FIXED_NOW,
                 FIXED_NOW
-        );
+        ), id);
     }
 
     public static LocalCredentialCreateRequest createRequest() {
